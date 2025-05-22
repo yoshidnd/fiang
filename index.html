@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the Inter font and smooth scrolling */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        /* Base light mode colors */
+        .light-mode {
+            background-color: #f3f4f6; /* Light gray background */
+            color: #1f2937; /* Dark text */
+        }
+
+        /* Dark mode colors */
+        .dark-mode {
+            background-color: #1a0033; /* Dark purple background */
+            color: #e5e7eb; /* Light gray text */
+        }
+
+        /* Specific element background transitions for dark mode */
+        .light-mode .card-bg {
+            background-color: #ffffff; /* White card background */
+        }
+        .dark-mode .card-bg {
+            background-color: #3b006b; /* Darker purple card background */
+        }
+
+        .light-mode .section-heading {
+            color: #6b21a8; /* Purple heading in light mode */
+        }
+        .dark-mode .section-heading {
+            color: #d8b4fe; /* Lighter purple heading in dark mode */
+        }
+
+        .light-mode .text-purple-600 {
+            color: #9333ea; /* Tailwind purple-600 */
+        }
+        .dark-mode .text-purple-600 {
+            color: #c084fc; /* Tailwind purple-400 for better contrast in dark mode */
+        }
+
+        .light-mode .border-purple-300 {
+            border-color: #d8b4fe;
+        }
+        .dark-mode .border-purple-300 {
+            border-color: #8b5cf6;
+        }
+
+        /* Smooth transitions for interactive elements */
+        .hover-scale:hover {
+            transform: scale(1.02);
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-shadow:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modal specific styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #ffffff; /* Light mode */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            width: 700px; /* Max width for the modal */
+            height: auto; /* Adjust height dynamically */
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #3b006b; /* Dark mode */
+            color: #e5e7eb;
+        }
+
+        .modal-overlay.open .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close-button {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b21a8; /* Light mode */
+        }
+
+        .dark-mode .modal-close-button {
+            color: #d8b4fe; /* Dark mode */
+        }
+
+        .modal-iframe-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio for YouTube/Spotify */
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+
+        .modal-iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Style for clickable music items */
+        .music-item {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .light-mode .music-item:hover {
+            background-color: #f0f0f0;
+        }
+        .dark-mode .music-item:hover {
+            background-color: #5a00a0;
+        }
+    </style>
+</head>
+<body class="light-mode min-h-screen flex flex-col">
+
+    <button id="darkModeToggle" class="fixed top-4 right-4 p-3 rounded-full shadow-lg z-50
+                                       bg-purple-600 text-white hover:bg-purple-700
+                                       focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75
+                                       transition-colors duration-300">
+        <svg id="sunIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M2 12h1m15.364 6.364l-.707.707M6.343 6.343l-.707-.707m12.728 0l-.707-.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+        <svg id="moonIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+    </button>
+
+    <main class="flex-grow container mx-auto px-4 py-8 md:py-12">
+
+        <section id="about" class="text-center mb-16 animate-fade-in">
+            <div class="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden mx-auto mb-6 shadow-xl border-4 border-purple-300">
+                <img src="piya.jpg" alt="Profile Picture" class="w-full h-full object-cover">
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold section-heading mb-4">Hi, I'm Sofia Signo!</h1>
+            <p class="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                A passionate web developer based in Montalban, Rodriguez Rizal, Philippines, with a keen eye for detail and a love for creating engaging and user-friendly digital experiences. I specialize in front-end development, bringing ideas to life with clean and efficient code.
+            </p>
+        </section>
+
+        <section id="skills" class="mb-16 animate-fade-in" style="animation-delay: 0.2s;">
+            <h2 class="text-3xl md:text-4xl font-semibold text-center section-heading mb-8">My Skills</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card-bg p-6 rounded-xl shadow-md hover-scale hover-shadow transition-all duration-300">
+                    <h3 class="text-xl font-medium text-purple-600 mb-3">Front-end Development</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>HTML5, CSS3, JavaScript (ES6+)</li>
+                        <li>React.js, Vue.js</li>
+                        <li>Tailwind CSS, Bootstrap</li>
+                        <li>Responsive Design</li>
+                    </ul>
+                </div>
+                <div class="card-bg p-6 rounded-xl shadow-md hover-scale hover-shadow transition-all duration-300">
+                    <h3 class="text-xl font-medium text-purple-600 mb-3">Back-end Development</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Node.js, Express.js</li>
+                        <li>Python, Flask</li>
+                        <li>RESTful APIs</li>
+                        <li>Database Management (MongoDB, PostgreSQL)</li>
+                    </ul>
+                </div>
+                <div class="card-bg p-6 rounded-xl shadow-md hover-scale hover-shadow transition-all duration-300">
+                    <h3 class="text-xl font-medium text-purple-600 mb-3">Tools & Others</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Git, GitHub</li>
+                        <li>VS Code</li>
+                        <li>Figma (Basic)</li>
+                        <li>Problem Solving</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects" class="mb-16 animate-fade-in" style="animation-delay: 0.4s;">
+            <h2 class="text-3xl md:text-4xl font-semibold text-center section-heading mb-8">My Projects</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card-bg p-6 rounded-xl shadow-md hover-scale hover-shadow transition-all duration-300">
+                    <img src="https://placehold.co/400x250/A78BFA/FFFFFF?text=Project+1" alt="Project 1 Thumbnail" class="rounded-lg mb-4 w-full h-48 object-cover">
+                    <h3 class="text-xl font-medium text-purple-600 mb-2">E-commerce Website</h3>
+                    <p class="mb-4">A full-stack e-commerce platform built with React, Node.js, and MongoDB, featuring user authentication, product listings, and a shopping cart.</p>
+                    <a href="#" class="inline-block bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition-colors duration-300">View Project</a>
+                </div>
+                <div class="card-bg p-6 rounded-xl shadow-md hover-scale hover-shadow transition-all duration-300">
+                    <img src="https://placehold.co/400x250/C4B5FD/FFFFFF?text=Project+2" alt="Project 2 Thumbnail" class="rounded-lg mb-4 w-full h-48 object-cover">
+                    <h3 class="text-xl font-medium text-purple-600 mb-2">Task Management App</h3>
+                    <p class="mb-4">A responsive task management application developed using Vue.js and a Firebase backend, allowing users to create, update, and delete tasks.</p>
+                    <a href="#" class="inline-block bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition-colors duration-300">View Project</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="music" class="mb-16 animate-fade-in" style="animation-delay: 0.6s;">
+            <h2 class="text-3xl md:text-4xl font-semibold text-center section-heading mb-8">Music</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card-bg p-4 rounded-xl shadow-md hover-scale hover-shadow music-item transition-all duration-300"
+                     data-music-url="https://open.spotify.com/embed/track/1e7VWi3ThY7t1F4vkfNfde?utm_source=generator?utm_source=generator&autoplay=true&autoplay=true">
+                    <h3 class="text-xl font-medium text-purple-600 mb-1">Damn Right</h3>
+                    <p class="text-sm">JENNIE</p>
+                </div>
+                <div class="card-bg p-4 rounded-xl shadow-md hover-scale hover-shadow music-item transition-all duration-300"
+                     data-music-url="https://open.spotify.com/embed/track/0xM8GcOTYlxy9ERBV8Ksx1?utm_source=generator?utm_source=generator&autoplay=true&autoplay=true">
+                    <h3 class="text-xl font-medium text-purple-600 mb-1">Lay It Down</h3>
+                    <p class="text-sm">Llyod</p>
+                </div>
+                <div class="card-bg p-4 rounded-xl shadow-md hover-scale hover-shadow music-item transition-all duration-300"
+                     data-music-url="https://open.spotify.com/embed/track/2wAJTrFhCnQyNSD3oUgTZO?utm_source=generator?utm_source=generator&autoplay=true&autoplay=true">
+                    <h3 class="text-xl font-medium text-purple-600 mb-1">Work Out</h3>
+                    <p class="text-sm">J.Cole</p>
+                </div>
+                </div>
+        </section>
+
+        <section id="contact" class="mb-16 animate-fade-in" style="animation-delay: 0.8s;">
+            <h2 class="text-3xl md:text-4xl font-semibold text-center section-heading mb-8">Get in Touch</h2>
+            <div class="card-bg p-8 rounded-xl shadow-md max-w-lg mx-auto hover-shadow transition-all duration-300">
+                <p class="text-lg text-center mb-6">I'm always open to new opportunities and collaborations. Feel free to reach out!</p>
+                <ul class="space-y-4 text-center">
+                    <li>
+                        <a href="mailto:piyasigno@gmail.com" class="text-purple-600 hover:underline text-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-9 6h.01M12 12V6m0 0a2 2 0 012-2h4a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h4a2 2 0 012 2z"></path></svg>
+                            piyasigno@gmail.com
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer" class="text-purple-600 hover:underline text-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path></svg>
+                            LinkedIn
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" class="text-purple-600 hover:underline text-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.865-.013-1.7C6.735 19.32 6.19 18.06 6.02 17.334c-.145-.378-.334-.917-.61-1.22-.265-.283-.59-.454-.01-.464.557-.01 1.01.206 1.28.584.66 1.093 1.845.785 2.3-.075.06-.485.27-.95.49-.68.175-1.4.08-1.97-.24-.585-.325-1.165-.98-1.165-2.017 0-.526.192-.958.512-1.29-.164-.407-.71-1.928.14-2.685.69-.075 1.7.268 2.15.98.66-.18 1.36-.267 2.07-.27.71 0 1.41.09 2.07.27.45-1.025 1.46-1.055 2.15-.98.85.757.305 2.278.14 2.685.32.332.512.764.512 1.29 0 1.04-.58 1.69-1.165 2.017-.57.32-1.28.41-1.97.24-.46.475-.98.92-1.53 1.25-.55.33-1.17.48-1.9.48-.23 0-.47-.02-.7-.05.02.21.03.41.03.62 0 .68-.205 1.55-.69 1.88-.38.26-.94.13-1.4-.075C7.7 20.35 4.865 16.6 4.865 12.017 4.865 6.484 9.342 2 14.823 2h-2.823z"></path></svg>
+                            GitHub
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-auto py-6 text-center text-sm light-mode-footer dark-mode-footer">
+        <p>© 2025 Sofia Signo. All rights reserved.</p>
+    </footer>
+
+    <div id="musicModal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeMusicModal" class="modal-close-button">×</button>
+            <h3 id="modalMusicTitle" class="text-2xl font-semibold mb-4 text-center section-heading"></h3>
+            <div class="modal-iframe-container">
+                <iframe id="musicPlayerIframe" src="" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const body = document.body;
+
+            // Function to set the theme
+            const setTheme = (isDarkMode) => {
+                if (isDarkMode) {
+                    body.classList.remove('light-mode');
+                    body.classList.add('dark-mode');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    body.classList.remove('dark-mode');
+                    body.classList.add('light-mode');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                    localStorage.setItem('theme', 'light');
+                }
+            };
+
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                setTheme(true);
+            } else {
+                setTheme(false); // Default to light mode if no preference or 'light'
+            }
+
+            // Toggle theme on button click
+            darkModeToggle.addEventListener('click', () => {
+                const isCurrentlyDarkMode = body.classList.contains('dark-mode');
+                setTheme(!isCurrentlyDarkMode);
+            });
+
+            // Animate sections on scroll (optional, but adds a nice touch)
+            const sections = document.querySelectorAll('.animate-fade-in');
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        observer.unobserve(entry.target); // Stop observing once animated
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Music Modal Functionality
+            const musicItems = document.querySelectorAll('.music-item');
+            const musicModal = document.getElementById('musicModal');
+            const closeMusicModalButton = document.getElementById('closeMusicModal');
+            const musicPlayerIframe = document.getElementById('musicPlayerIframe');
+            const modalMusicTitle = document.getElementById('modalMusicTitle');
+
+            musicItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // Get the music URL from the data-music-url attribute
+                    const musicUrl = item.getAttribute('data-music-url');
+                    // Get the music title from the h3 tag inside the music item
+                    const musicTitle = item.querySelector('h3').textContent;
+
+                    if (musicUrl) {
+                        // Set the iframe source and modal title
+                        musicPlayerIframe.src = musicUrl;
+                        modalMusicTitle.textContent = musicTitle;
+                        // Open the modal
+                        musicModal.classList.add('open');
+                    }
+                });
+            });
+
+            // Close modal when the close button is clicked
+            closeMusicModalButton.addEventListener('click', () => {
+                musicModal.classList.remove('open');
+                musicPlayerIframe.src = ''; // Stop the music by clearing the iframe src
+            });
+
+            // Close modal when clicking outside the content area
+            musicModal.addEventListener('click', (event) => {
+                if (event.target === musicModal) {
+                    musicModal.classList.remove('open');
+                    musicPlayerIframe.src = ''; // Stop the music
+                }
+            });
+        });
+    </script>
+</body>
+</html>
